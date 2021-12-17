@@ -1,0 +1,10 @@
+clip
+flask
+flask-cors
+gputil
+numpy
+opency-python
+pillow
+timm
+tqdm
+urllib3

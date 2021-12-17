@@ -8,3 +8,4 @@ pillow
 timm
 tqdm
 urllib3
+transformers

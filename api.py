@@ -12,17 +12,12 @@ import matplotlib.pyplot as plt
 import clip
 import torch
 from model import MMSegModel, get_clip,KoGPT
-# from transformers import AutoTokenizer, AutoModelForCausalLM 
-# import os
-# import kss
-# os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 app = Flask (__name__)
 CORS(app)
 
 ## model load
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# device='cpu'
 
 seg_model = MMSegModel(
     cfg='/opt/ml/segmentation_module/mmsegmentation/work_dirs/swinT_segformer_add_pascal/swinT_segformer.py',
@@ -41,22 +36,6 @@ preprocess = A.Compose([
     AP.ToTensorV2()
 ])
 
-emotions=[
-    'a picture of hipster cat',
-    'a picture of sad cat',
-    'a picture of cute cat',
-    'a picture of angry cat',
-    'a picture of happy cat',
-    'a picture of surprised cat'
-]
-actions=[
-    'a picture of cat playing',
-    'a picture of cat eating',
-    'a picture of sleeping cat',
-    'a picture of cat wearing a mask',
-    'a picture of running cat',
-    'a picture of jumping cat',
-]
 
 actions = [
     'a picture of cat lying down',
@@ -83,15 +62,6 @@ emotions = [
     'a picture of cloudy cat',
     'a picture of angry cat',
 ]
-
-labels = [  'a picture of cat playing',
-            'a picture of cat eating',
-            'a picture of hipster cat','a picture of sad cat',
-            'a picture of cute cat','a picture of angry cat',
-            'a picture of cat wearing a mask','a picture of sleeping cat',
-            'a picture of happy cat','a picture of running cat',
-            'a picture of surprised cat'
-            ]
 
 labels_eng2kor = {
     'a picture of cat lying down':"엎드려있는 고양이",
@@ -133,9 +103,6 @@ def image():
 
     _,masked_img = seg_model(img)
     masked_img = masked_img.astype(np.uint8)
-    # processed_img = get_segmap(seg_model,img,seg_preprocess)
-    # plt.imshow(processed_img)
-    # plt.savefig('segmap.png')
 
     if isinstance(preprocess,A.Compose):
         processed_img = preprocess(image=img)['image'].unsqueeze(0).to(device)
@@ -177,19 +144,6 @@ def image():
 
         action_text = gpt_model(kor_action)
         emotion_text = gpt_model(kor_emotion)
-        # f"action:[{com_pred_action}]\nemotion:[{masked_pred_emotion}]"
-
-        # image_logit,_ = clip_model.forward(processed_img,token_labels)
-        # probs = image_logit.softmax(dim=-1).cpu().numpy()
-        # pred = probs.argmax()
-        # text = labels[pred]
-
-
-        # prompt = label2prompt[text]
-        # tokens = gpt_tokenizer.encode(prompt, return_tensors='pt').to(device='cuda', non_blocking=True)
-        # gen_tokens = gpt_model.generate(tokens, do_sample=True, temperature=0.8, max_length=128)
-        # generated = gpt_tokenizer.batch_decode(gen_tokens)[0]
-            
 
     buffered = BytesIO()
     img = Image.fromarray(img)

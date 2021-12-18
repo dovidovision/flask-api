@@ -61,7 +61,7 @@ class Tester():
         ]
         self.PATH = PATH
         self._get_pretrained()
-        # self._half_precision()
+        self._half_precision()
         self.text_embedding = self._get_textEmb()
     
     def _get_pretrained(self):

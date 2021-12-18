@@ -118,7 +118,7 @@ class Tester():
 if __name__ == '__main__': 
     tester = Tester()
     while True:
-        fpath = input('>>>')
+        fpath = input('>>>>')
         startTime = time.time()
         img = Image.open('./00000391_017.jpg')
         print(tester.get_result(img))

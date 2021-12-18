@@ -119,6 +119,6 @@ if __name__ == '__main__':
     while True:
         fpath = input('>>>')
         startTime = time.time()
-        img = Image.open('/opt/ml/FinalProject/koclip-train/dataMaker/dataset/cats9k/CAT_00/00000001_012.jpg')
+        img = Image.open('./00000391_017.jpg')
         print(tester.get_result(img))
         print(time.time() - startTime)

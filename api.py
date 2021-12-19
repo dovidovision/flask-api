@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from io import BytesIO
 from PIL import Image
 from io import BytesIO
 import albumentations as A
@@ -20,8 +19,8 @@ CORS(app)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 seg_model = MMSegModel(
-    cfg='/opt/ml/segmentation_module/mmsegmentation/work_dirs/swinT_segformer_add_pascal/swinT_segformer.py',
-    checkpoint='/opt/ml/segmentation_module/mmsegmentation/work_dirs/swinT_segformer_add_pascal/best_mIoU_epoch_11.pth',
+    cfg='./assets/segmentation/swinT_segformer.py',
+    checkpoint='./assets/segmentation/weights.pth',
     device=device)
 
 gpt_model = KoGPT(pretrained='larcane/kogpt2-cat-diary',device=device)
@@ -85,7 +84,7 @@ labels_eng2kor = {
 
 action_tokens = clip.tokenize(actions).to(device)
 emotion_tokens = clip.tokenize(emotions).to(device)
-
+cat_token = clip.tokenize(['cat']).to(device)
 
 @app.route('/hello')
 def hello():
@@ -102,55 +101,63 @@ def image():
 
 
     _,masked_img = seg_model(img)
-    masked_img = masked_img.astype(np.uint8)
-
-    if isinstance(preprocess,A.Compose):
-        processed_img = preprocess(image=img)['image'].unsqueeze(0).to(device)
-        processed_masked_img = preprocess(image=masked_img)['image'].unsqueeze(0).to(device)
+    if masked_img is None:
+        text = f"고양이가 아니다냥!\nfilter in segmentation model"
     else:
-        processed_img = preprocess(img).unsqueeze(0).to(device)
-        processed_masked_img = preprocess(masked_img).unsqueeze(0).to(device)
+        masked_img = masked_img.astype(np.uint8)
 
-        
-    # 1. masked_img와 emotion token/ action token
-    # 2. emotion token이 큰 순서대로 action token에 곱함
-    # 3. img로 action token
-    # 4. action token끼리 곱
-    # 5. 최대 token 출력
+        if isinstance(preprocess,A.Compose):
+            processed_img = preprocess(image=img)['image'].unsqueeze(0).to(device)
+            processed_masked_img = preprocess(image=masked_img)['image'].unsqueeze(0).to(device)
+        else:
+            processed_img = preprocess(img).unsqueeze(0).to(device)
+            processed_masked_img = preprocess(masked_img).unsqueeze(0).to(device)
 
-    with torch.no_grad():
-        image_features = clip_model.encode_image(torch.cat([processed_masked_img,processed_img],dim=0))
-        text_features = clip_model.encode_text(torch.cat([action_tokens,emotion_tokens],dim=0))
+        # 0. 고양이 사진인지 체크
+        # 1. masked_img와 emotion token/ action token
+        # 2. emotion token이 큰 순서대로 action token에 곱함
+        # 3. img로 action token
+        # 4. action token끼리 곱
+        # 5. 최대 token 출력
 
-        # normalized features
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        with torch.no_grad():
+            image_features = clip_model.encode_image(torch.cat([processed_masked_img,processed_img],dim=0))
+            text_features = clip_model.encode_text(torch.cat([action_tokens,emotion_tokens,cat_token],dim=0))
 
-        masked_img_logit,origin_img_logit = image_features@text_features.T
+            # normalized features
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
-        masked_action_logit = masked_img_logit.squeeze()[:len(actions)]
-        masked_emotion_logit = masked_img_logit.squeeze()[len(actions):]
-        origin_action_logit = origin_img_logit.squeeze()[:len(actions)]
-        origin_emotion_logit = origin_img_logit.squeeze()[len(actions):]
+            masked_img_logit,origin_img_logit = image_features@text_features.T
 
-        masked_pred_emotion = emotions[masked_emotion_logit.argmax()]
-        masked_pred_action = actions[masked_action_logit.argmax()]
-        origin_pred_emotion = emotions[origin_emotion_logit.argmax()]
-        origin_pred_action = actions[origin_action_logit.argmax()]
-        com_pred_action =  actions[(origin_action_logit*masked_action_logit).argmax()]
+            cat_logit = origin_img_logit.squeeze()[-1]
+            if cat_logit>=0.2:
+                masked_action_logit = masked_img_logit.squeeze()[:len(actions)]
+                masked_emotion_logit = masked_img_logit.squeeze()[len(actions):-1]
+                origin_action_logit = origin_img_logit.squeeze()[:len(actions)]
+                origin_emotion_logit = origin_img_logit.squeeze()[len(actions):-1]
 
-        kor_action = labels_eng2kor[com_pred_action]
-        kor_emotion = labels_eng2kor[masked_pred_emotion]
+                masked_pred_emotion = emotions[masked_emotion_logit.argmax()]
+                masked_pred_action = actions[masked_action_logit.argmax()]
+                origin_pred_emotion = emotions[origin_emotion_logit.argmax()]
+                origin_pred_action = actions[origin_action_logit.argmax()]
+                com_pred_action =  actions[(origin_action_logit*masked_action_logit).argmax()]
 
-        action_text = gpt_model(kor_action)
-        emotion_text = gpt_model(kor_emotion)
+                kor_action = labels_eng2kor[com_pred_action]
+                kor_emotion = labels_eng2kor[masked_pred_emotion]
+
+                action_text = gpt_model(kor_action)
+                emotion_text = gpt_model(kor_emotion)
+                text=f"action:[{kor_action}]{action_text}\n\nemotion:[{kor_emotion}]{emotion_text}"
+            else:
+                text=f"고양이가 아니다냥!\ncat similarity:[{cat_logit}]"
 
     buffered = BytesIO()
     img = Image.fromarray(img)
     img.save(buffered, format="JPEG")
     img_str = base64.b64encode(buffered.getvalue())
 
-    return {'image': str(img_str), 'text':f"action:[{kor_action}]{action_text}\n\nemotion:[{kor_emotion}]{emotion_text}"}
+    return {'image': str(img_str), 'text':text}
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=6006)

@@ -1,10 +1,9 @@
 import torch
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import clip
-
 import re
+
 from transformers import PreTrainedTokenizerFast,GPT2LMHeadModel
 class KoGPT:
     def __init__(self,pretrained='larcane/kogpt2-cat-diary',device='cpu'):
@@ -75,11 +74,13 @@ class MMSegModel:
         except: y1=0
         try:
             x2 = np.where(mask.max(axis=0)==1)[0].max()
-        except: x2=mask.shape[1]
+        except: x2=mask.shape[0]
         try:
             y2 = np.where(mask.max(axis=1)==1)[0].max()
-        except: y2=mask.shape[2]
+        except: y2=mask.shape[1]
 
+        if mask.sum().item() < 30:
+            return (None,None)
         masked_image[mask==0]=255 # HxWx3
         masked_image = masked_image[y1:y2,x1:x2,:]
         return (image,masked_image)

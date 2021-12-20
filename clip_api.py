@@ -14,8 +14,8 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seg-server',type=str,default='http://localhost:8000/image',help='segmentation server http address.')
-    parser.add_argument('--port',type=int,default=8001,help='port number to access from gpt2 server.')
+    parser.add_argument('--seg-server',type=str,default='http://localhost:8001/image',help='segmentation server http address.')
+    parser.add_argument('--port',type=int,default=8000,help='port number to access from gpt2 server.')
 
     args = parser.parse_args()
     return args
@@ -85,19 +85,25 @@ action_tokens = clip.tokenize(actions).to(device)
 emotion_tokens = clip.tokenize(emotions).to(device)
 cat_token = clip.tokenize(['cat']).to(device)
 
+def base64padding(data):
+    return data[1:] +'='*(4-len(data)%4)
+    
 
 @app.route('/image', methods = ['POST'])
 def image():
     res = requests.post(args.seg_server,json=request.get_json())
-    data =res.json()
-    img_bytes = BytesIO(base64.b64decode(data['image'][1:]))
-    masked_img_bytes = BytesIO(base64.b64decode(data['masked_image'][1:]))
+    data = res.json()
 
-    img = Image.open(img_bytes).convert('RGB')
-    img = np.array(img)
+    img_bytes = data['image']
+    masked_img_bytes = data['masked_image']
 
     if masked_img_bytes is not None:
-        masked_img = Image.open(masked_img_bytes).convert('RGB')
+        img_bytes = base64.b64decode(base64padding(img_bytes))
+        img = Image.open(BytesIO(img_bytes)).convert('RGB')
+        img = np.array(img)
+
+        masked_img_bytes = base64.b64decode(base64padding(masked_img_bytes))
+        masked_img = Image.open(BytesIO(masked_img_bytes)).convert('RGB')
         masked_img = np.array(masked_img)
 
         processed_img = preprocess(image=img)['image'].unsqueeze(0).to(device)
@@ -141,13 +147,8 @@ def image():
     else:
         kor_action = kor_emotion = None
 
-    buffered = BytesIO()
-    img = Image.fromarray(img)
-    img.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue())
-
-    return {'image': str(img_str), 'kor_action':kor_action,'kor_emotion':kor_emotion}
+    return {'kor_action':kor_action,'kor_emotion':kor_emotion}
 
 if __name__ == "__main__":
     args = parse_args()
-    app.run(host='0.0.0.0',port=args.port)
+    app.run(host='0.0.0.0',port=8000)

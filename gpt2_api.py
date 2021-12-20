@@ -11,7 +11,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--clip-server',type=str,default='http://localhost:8001/image',help='clip server http address.')
+    parser.add_argument('--clip-server',type=str,default='http://localhost:8000/image',help='clip server http address.')
     args = parser.parse_args()
     return args
 
@@ -24,7 +24,7 @@ gpt_model = KoGPT(pretrained='larcane/kogpt2-cat-diary',device=device)
 
 @app.route('/image', methods = ['POST'])
 def image():
-    res = requests.post(args.clip_server,json=request.get_json())
+    res = requests.post('http://localhost:8000/image',json=request.get_json())
     data = res.json()
 
     kor_action = data['kor_action']
@@ -36,7 +36,7 @@ def image():
     else:
         text= f"고양이가 아니다냥!!"
 
-    return {'image': data['image'], 'text':text}
+    return text
 
 if __name__ == "__main__":
     args = parse_args()

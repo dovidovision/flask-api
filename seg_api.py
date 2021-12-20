@@ -11,7 +11,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port',type=int,help='port to access from clip server.')
+    parser.add_argument('--port',type=int,default=8001,help='port to access from clip server.')
     args = parser.parse_args()
     return args
 
@@ -43,7 +43,7 @@ def image():
         masked_img.save(mask_buffered,format='JPEG')
         masked_img_str = base64.b64encode(mask_buffered.getvalue())
     else:
-        masked_img_str=None
+        return {'image':None,'masked_image':None}
 
     img = Image.fromarray(img)
     img.save(img_buffered, format="JPEG")
@@ -54,5 +54,5 @@ def image():
 
 if __name__ == "__main__":
     args = parse_args()
-    app.run(host='0.0.0.0',port=args.port)
+    app.run(host='0.0.0.0',port=8001,debug=True)
 

@@ -152,12 +152,8 @@ def image():
             else:
                 text=f"고양이가 아니다냥!\ncat similarity:[{cat_logit}]"
 
-    buffered = BytesIO()
-    img = Image.fromarray(img)
-    img.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue())
 
-    return {'image': str(img_str), 'text':text}
+    return text
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=6006)

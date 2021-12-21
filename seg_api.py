@@ -54,5 +54,5 @@ def image():
 
 if __name__ == "__main__":
     args = parse_args()
-    app.run(host='0.0.0.0',port=8001,debug=True)
+    app.run(host='0.0.0.0',port=args.port)
 

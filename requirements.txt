@@ -1,6 +1,8 @@
 pip==21.2.2
 albumentations==1.1.0
 clip==1.0
+Flask==2.0.2
 Flask-Cors==3.0.10
 mmcv-full==1.4.1
 mmsegmentation==0.20.2
+transformers==4.12.5

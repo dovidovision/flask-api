@@ -43,6 +43,8 @@ actions = [
     'a picture of playing cat',
     'a picture of cat punching',
     'a picture of cat eating',
+    'a picture of sitting cat',
+    'a picture of standing cat',
     # 'hugged cat',
     # 'box cat',
     # 'liquid cat',
@@ -79,6 +81,8 @@ labels_eng2kor = {
     'a picture of sad cat':"슬픈 고양이",
     'a picture of cloudy cat':"언짢은 고양이",
     'a picture of angry cat':"화난 고양이",
+    'a picture of standing cat':'서있는 고양이',
+    'a picture of sitting cat':'앉아있는 고양이',
 }
 
 action_tokens = clip.tokenize(actions).to(device)
@@ -142,13 +146,15 @@ def image():
 
                 kor_action = labels_eng2kor[com_pred_action]
                 kor_emotion = labels_eng2kor[masked_pred_emotion]
-            else:
-                kor_action = kor_emotion = None
-    else:
-        kor_action = kor_emotion = None
 
-    return {'kor_action':kor_action,'kor_emotion':kor_emotion}
+                result={'kor_action':kor_action,'kor_emotion':kor_emotion}
+            else:
+                result={'kor_action':None,'kor_emotion':None}
+    else:
+        result={'kor_action':None,'kor_emotion':None}
+
+    return result
 
 if __name__ == "__main__":
     args = parse_args()
-    app.run(host='0.0.0.0',port=8000)
+    app.run(host='0.0.0.0',port=args.port)

@@ -15,7 +15,7 @@ try:
 except ImportError:
     BICUBIC = Image.BICUBIC
 
-isHalf = False
+isHalf = True
 
 
 class Tester():

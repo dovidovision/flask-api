@@ -14,12 +14,12 @@ tester = Tester()
 def inference():
     data = request.get_json()
     img = Image.open(BytesIO(base64.b64decode(data['image'].split(',')[-1])))
-    img = img.convert('RGB')
+    # img = img.convert('RGB')
 
-    buffered = BytesIO()
-    img_str = base64.b64encode(buffered.getvalue())
+    # buffered = BytesIO()
+    # img_str = base64.b64encode(buffered.getvalue())
     result = tester.get_result(img)
-    print(result, end='\n\n')
+    # print(result, end='\n\n')
 
     return result
 

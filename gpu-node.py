@@ -10,7 +10,7 @@ app = Flask (__name__)
 CORS(app)
 tester = Tester()
 
-@app.route('/inference', methods = ['POST'])
+@app.route('/image', methods = ['POST'])
 def inference():
     data = request.get_json()
     img = Image.open(BytesIO(base64.b64decode(data['image'].split(',')[-1])))

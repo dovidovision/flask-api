@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument('--gpu_id', type=int, default=0, help='gpu id')
 opt = parser.parse_args()
 
-url = 'http://pred.ga:8083'
+url = 'http://pred.ga:5000'
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
 class GPU:
@@ -39,4 +39,5 @@ while True:
 	gpu = GPUtil.getGPUs()[0]
 	_load = int(gpu.load*100)
 	_mem = int(gpu.memoryUsed / gpu.memoryTotal * 100)
-	gpu_instance.sample_post(f'LOAD: {_load:>3}%  [{"|"*int(_load/2):<50}]\t MEM: {int(_mem):>3}%  [{"|"*int(_mem/2):<50}]')
+	gpu_instance.sample_post(f'{_load:>4}%')
+	# gpu_instance.sample_post(f'LOAD: {_load:>3}%  [{"|"*int(_load/2):<50}]\t MEM: {int(_mem):>3}%  [{"|"*int(_mem/2):<50}]')

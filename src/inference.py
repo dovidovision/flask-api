@@ -15,6 +15,8 @@ try:
 except ImportError:
     BICUBIC = Image.BICUBIC
 
+isHalf = False
+
 
 class Tester():
     def __init__(self, PATH='/opt/ml/FinalProject/koclip-train/text_encoder_ViT.pth'):
@@ -61,7 +63,8 @@ class Tester():
         ]
         self.PATH = PATH
         self._get_pretrained()
-        # self._half_precision()
+        if isHalf:
+            self._half_precision()
         self.text_embedding = self._get_textEmb()
     
     def _get_pretrained(self):
@@ -96,7 +99,10 @@ class Tester():
         )
         batch_input_ids = text_tensor['input_ids']
         batch_attention_mask = text_tensor['attention_mask']
-        text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device)).half()
+        if isHalf:
+            text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device)).half()
+        else:
+            text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device)).float()
         text_embedding = text_embedding / text_embedding.norm(dim=-1, keepdim=True)
 
         return text_embedding.T
@@ -104,7 +110,10 @@ class Tester():
     def get_result(self, img)-> str:
         img = self._preprocess(img)
         with no_grad():
-            image_embedding = self.ImageEncoder.encode_image(img.to(self.device)) # Output : N x 512
+            if isHalf:
+                image_embedding = self.ImageEncoder.encode_image(img.to(self.device)) # Output : N x 512
+            else:
+                image_embedding = self.ImageEncoder.encode_image(img.to(self.device)).float() # Output : N x 512
         
         # Normalization is need for calculating cosine similarity
         image_embedding = image_embedding / image_embedding.norm(dim=-1, keepdim=True)    

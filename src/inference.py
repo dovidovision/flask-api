@@ -81,7 +81,7 @@ class Tester():
     def _preprocess(self, img):
         n_px = 224
         trans = T.Compose([
-            T.Resize((n_px, n_px)),
+            # T.Resize((n_px, n_px)),
             # lambda img: img.convert('RGB'),
             T.ToTensor(),
             T.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
@@ -100,7 +100,7 @@ class Tester():
         batch_input_ids = text_tensor['input_ids']
         batch_attention_mask = text_tensor['attention_mask']
         if isHalf:
-            text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device)).half()
+            text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device))
         else:
             text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device)).float()
         text_embedding = text_embedding / text_embedding.norm(dim=-1, keepdim=True)

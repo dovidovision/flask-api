@@ -12,8 +12,8 @@ tester = Tester()
 
 @app.route('/image', methods = ['POST'])
 def inference():
-    data = request.get_json()
-    img = Image.open(BytesIO(base64.b64decode(data['image'].split(',')[-1])))
+    # data = request.get_json()
+    img = Image.open(BytesIO(base64.b64decode(request.get_json()['image'].split(',')[-1])))
     # img = img.convert('RGB')
 
     # buffered = BytesIO()

@@ -7,7 +7,7 @@ from PIL import Image
 import os
 import math
 import time
-# from models import TextEncoder
+from models import TextEncoder
 from .models import TextEncoder
 from transformers import AutoTokenizer
 try:
@@ -101,7 +101,7 @@ class Tester():
         batch_input_ids = text_tensor['input_ids']
         batch_attention_mask = text_tensor['attention_mask']
         if isHalf:
-            text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device))
+            text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device)).half()
         else:
             text_embedding = self.TextEncoder(batch_input_ids.to(self.device), batch_attention_mask.to(self.device)).float()
         text_embedding = text_embedding / text_embedding.norm(dim=-1, keepdim=True)

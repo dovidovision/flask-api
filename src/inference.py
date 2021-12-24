@@ -7,8 +7,8 @@ from PIL import Image
 import os
 import math
 import time
-from models import TextEncoder
-# from .models import TextEncoder
+# from models import TextEncoder
+from .models import TextEncoder
 from transformers import AutoTokenizer
 try:
     from torchvision.transforms import InterpolationMode

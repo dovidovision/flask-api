@@ -35,9 +35,12 @@ class GPU:
 gpu_instance = GPU(opt.gpu_id)
 
 while True:
-	# time.sleep(0.1)
-	gpu = GPUtil.getGPUs()[0]
-	_load = int(gpu.load*100)
-	_mem = int(gpu.memoryUsed / gpu.memoryTotal * 100)
-	gpu_instance.sample_post(f'{_load:>4}%')
-	# gpu_instance.sample_post(f'LOAD: {_load:>3}%  [{"|"*int(_load/2):<50}]\t MEM: {int(_mem):>3}%  [{"|"*int(_mem/2):<50}]')
+	try:
+		# time.sleep(0.1)
+		gpu = GPUtil.getGPUs()[0]
+		_load = int(gpu.load*100)
+		_mem = int(gpu.memoryUsed / gpu.memoryTotal * 100)
+		gpu_instance.sample_post(f'{_load:>4}%')
+			# gpu_instance.sample_post(f'LOAD: {_load:>3}%  [{"|"*int(_load/2):<50}]\t MEM: {int(_mem):>3}%  [{"|"*int(_mem/2):<50}]')
+	except Exception as e:
+		print('cannot reach server')

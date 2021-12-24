@@ -118,7 +118,7 @@ class Tester():
         
         # Normalization is need for calculating cosine similarity
         image_embedding = image_embedding / image_embedding.norm(dim=-1, keepdim=True)    
-        self.text_embedding = self._get_textEmb()
+        # self.text_embedding = self._get_textEmb()
         img2text = (image_embedding @ self.text_embedding) * math.exp(0.07)
         _, pred = torch.max(img2text, 1)
 

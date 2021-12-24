@@ -81,7 +81,7 @@ class Tester():
     def _preprocess(self, img):
         n_px = 224
         trans = T.Compose([
-            # T.Resize((n_px, n_px)),
+            T.Resize((n_px, n_px)),
             # lambda img: img.convert('RGB'),
             T.ToTensor(),
             T.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
